@@ -1,5 +1,5 @@
 # Workspace ID for the Log Analytics workspace where the ASim schema and data tests will be conducted
-$global:workspaceId = "e9beceee-7d61-429f-a177-ee5e2b7f481a"
+$global:workspaceId = "cb6a2b4f-7073-4e59-9ab0-803cde6b2221"
 
 # ANSI escape code for green text
 $green = "`e[32m"
@@ -166,6 +166,12 @@ function invokeAsimTester([string] $test, [string] $name, [string] $kind) {
             }
         }
     } catch {
+        $IgnoreParserIsSet = IgnoreValidationForASIMParsers | Where-Object { $name -like "$_*" }
+        if ($IgnoreParserIsSet) {
+            Write-Host "::warning::The parser '$name' is listed in the parser exclusions file. Therefore, this workflow run will not fail because of it. To allow this parser to cause the workflow to fail, please remove its name from the exclusions list file located at: '$ParserExclusionsFilePath'"
+            return
+        }
+        
         Write-Host "::error::  -- $_"
         Write-Host "::error::     $(((Get-Error -Newest 1)?.Exception)?.Response?.Content)"
         throw $_ # Commented out to allow the script to continue running
